@@ -97,4 +97,8 @@ Rate_limiter-API/
 ---
 
 ## 📝 License
+<<<<<<< HEAD
 This project is open source and available for educational purposes.
+=======
+This project is open source and available for educational purposes.
+>>>>>>> 995d2d8ee2f4ce0effa81545d2c9ccdee441b9f6

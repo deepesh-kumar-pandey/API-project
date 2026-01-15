@@ -3,6 +3,9 @@
 #include <algorithm>
 #include <sstream>
 #include <iomanip>
+#include <cstdlib>
+#include <cstring>
+#include <iostream>
 using namespace std;  
 
 // Get encryption key from environment variable (more secure than hardcoding)

@@ -21,7 +21,7 @@ void print_header() {
     cout << "========================================\n";
     cout << "        Gatekeeper CLI         \n";
     cout << "========================================\n";
-    cout << " Storage: limiter_db.txt\n";
+    cout << " Storage: limiter_db.txt (encrypted)\n";
     cout << " Commands: check <id>, status <id>, exit\n";
     cout << "========================================\n";
 }
