@@ -10,7 +10,7 @@ FROM alpine:latest
 WORKDIR /root/
 COPY --from=builder /app/gatekeeper .
 
-# Correct syntax with the RUN prefix
+# Correct syntax
 RUN touch limiter_db.txt
 
 CMD ["./gatekeeper"]
