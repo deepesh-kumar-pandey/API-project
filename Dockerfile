@@ -1,16 +1,16 @@
-# STAGE 1: Build
+# Stage 1: Build
 FROM gcc:15 AS builder
 WORKDIR /app
-
-# Copy everything (src, include, etc.)
 COPY . .
+# Compile BOTH source files
+RUN g++ -std=c++17 src/main.cpp src/Rate_limiter.cpp -Iinclude -o gatekeeper -pthread -static
 
-# Compile: -Iinclude tells g++ to look in the include folder for .h files
-RUN g++ -std=c++17 src/main.cpp -Iinclude -o gatekeeper -pthread -static
-
-# STAGE 2: Run
+# Stage 2: Runtime
 FROM alpine:latest
 WORKDIR /root/
 COPY --from=builder /app/gatekeeper .
+
+# Correct syntax with the RUN prefix
 RUN touch limiter_db.txt
+
 CMD ["./gatekeeper"]
