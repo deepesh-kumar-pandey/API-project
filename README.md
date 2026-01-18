@@ -96,9 +96,78 @@ Rate_limiter-API/
 
 ---
 
+## 🧪 Docker Live Testing
+
+You can run automated tests against the containerized application using these scripts.
+
+### PowerShell Script
+```powershell
+# Configuration for the test
+$TEMP_KEY = "test_secret_123"
+$MAX_REQ  = "5"
+$WINDOW   = "10"
+$USER_ID  = "tester_01"
+
+Write-Host "------------------------------------------------" -ForegroundColor Cyan
+Write-Host " Starting Gatekeeper Live Test (PowerShell)     "
+Write-Host " Settings: $MAX_REQ requests / $WINDOW seconds  "
+Write-Host "------------------------------------------------" -ForegroundColor Cyan
+
+# Grouping commands into a block to pipe into Docker's stdin
+& {
+    echo $MAX_REQ      # Setting Max Requests
+    echo $WINDOW       # Setting Time Window
+    
+    # Loop to send 10 requests (5 should be ALLOWED, 5 should be DENIED)
+    for ($i = 1; $i -le 10; $i++) {
+        echo "check $USER_ID"
+        Start-Sleep -Milliseconds 100
+    }
+
+    echo "status $USER_ID"   # Check final status
+    echo "exit"             # Save and close the app
+} | docker run -i --rm -e ENCRYPTION_KEY=$TEMP_KEY gatekeeper_app
+```
+
+### Git Bash Script
+```bash
+#!/bin/bash
+
+# Configuration for the test
+TEMP_KEY="test_secret_123"
+MAX_REQ="5"
+WINDOW="10"
+USER="tester_01"
+
+echo "------------------------------------------------"
+echo " Starting Gatekeeper Live Test (Docker)         "
+echo " Settings: $MAX_REQ requests / $WINDOW seconds  "
+echo "------------------------------------------------"
+
+# We pipe all commands into the container's stdin
+{
+  echo "$MAX_REQ"      # Setting Max Requests
+  echo "$WINDOW"       # Setting Time Window
+  
+  # Loop to send 10 requests (5 should pass, 5 should fail)
+  for i in {1..10}
+  do
+    echo "check $USER"
+    sleep 0.1          # Small delay to keep logs readable
+  done
+
+  echo "status $USER"   # Check final status
+  echo "exit"           # Save and close
+} | docker run -i --rm -e ENCRYPTION_KEY="$TEMP_KEY" gatekeeper_app
+```
+
+### Expected Output
+With settings of 5 requests per 10 seconds:
+- First 5 `check` commands → `[ALLOWED]`
+- Next 5 `check` commands → `[DENIED]`
+- Final `status` shows `0 requests left`
+
+---
+
 ## 📝 License
-<<<<<<< HEAD
 This project is open source and available for educational purposes.
-=======
-This project is open source and available for educational purposes.
->>>>>>> 995d2d8ee2f4ce0effa81545d2c9ccdee441b9f6

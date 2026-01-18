@@ -26,15 +26,7 @@ void print_header() {
     cout << "========================================\n";
 }
 
-void seed_data(Rate_Limiter& limiter) {
-    vector<string> dummy_users = {"alex", "bob", "gemini", "dev_user"};
-    for(const string& user : dummy_users) {
-        for(int i = 0; i < 3; i++) {
-            limiter.is_request_allowed(user);
-        }
-    }
-    cout << ">> System seeded with " << dummy_users.size() << " dummy users.\n";
-}
+
 
 int main() {
     int max_req, win_sec;
@@ -51,7 +43,7 @@ int main() {
     limiter.load_from_file("limiter_db.txt");
 
     print_header();
-    seed_data(limiter);
+
 
     cout << "\nRate Limiter System Active (" << max_req << " req / " << win_sec << "s)\n";
     display_help();
