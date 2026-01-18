@@ -26,8 +26,6 @@ void print_header() {
     cout << "========================================\n";
 }
 
-
-
 int main() {
     int max_req, win_sec;
 
@@ -43,7 +41,6 @@ int main() {
     limiter.load_from_file("limiter_db.txt");
 
     print_header();
-
 
     cout << "\nRate Limiter System Active (" << max_req << " req / " << win_sec << "s)\n";
     display_help();
