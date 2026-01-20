@@ -1,41 +1,42 @@
-# Rate Limiter API 🚀
+# Gatekeeper: High-Performance Rate Limiter 🚀
 
-A high-performance, thread-safe Rate Limiter implemented in **Modern C++**. This service protects APIs from abuse by limiting requests a user can make within a specific time window.
+A production-grade, thread-safe Rate Limiter implemented in **Modern C++**. This service provides a low-latency barrier for APIs, protecting backend resources from traffic spikes, DDoS attempts, and brute-force abuse.
 
-## ✨ Features
-* **C++11 Compatible:** Clean, portable code that works with C++11 and above.
-* **Thread-Safe:** Handles concurrent requests safely using mutex locks.
-* **Persistent Storage:** Saves and loads rate-limit data from `limiter_db.txt`.
-* **Dockerized:** Ready for deployment using a lightweight Docker build.
+## ✨ Engineering Highlights
+* **Low-Latency Design:** Developed in C++ to ensure sub-millisecond overhead per request check, making it suitable for high-frequency trading or high-traffic gateways.
+* **Thread Safety:** Utilizes `std::mutex` and RAII-style locking (`std::lock_guard`) to ensure data integrity and prevent race conditions in multi-threaded environments.
+* **Algorithm:** Implements **Fixed-Window Counter** logic with a local state persistence layer.
+* **Cloud-Native & DevOps Ready:** Fully containerized using multi-stage Docker builds (Alpine Linux) and designed for Infrastructure-as-Code (IaC) deployment.
 
 ---
 
-## 🛠️ Tech Stack
-* **Language:** C++11+
-* **Compiler:** GCC / MinGW-w64 / MSYS2
-* **Containerization:** Docker (Alpine Linux base)
-* **Development Environment:** VS Code on Windows
+## 🛠️ Tech Stack & Tools
+* **Core Logic:** C++11 / C++14 (Standard Library)
+* **Concurrency:** Pthreads / C++ Concurrency API
+* **Containerization:** Docker (Lightweight Alpine Base)
+* **Orchestration & IaC:** Terraform & Kubernetes (Manifests included)
+* **Dev Environment:** VS Code, GCC/MinGW, WSL2
+
+---
+
+## 🏗️ System Architecture
+The application is designed to function as a microservice security layer that intercepts request metadata before it reaches expensive backend resources.
+
+1.  **Request Ingest:** The service accepts a `user_id` or `api_key`.
+2.  **Validation Layer:** The `RateLimiter` class checks the timestamp against the predefined quota.
+3.  **Persistence:** State is flushed to `limiter_db.txt` to ensure rate-limit continuity across service restarts or container crashes.
 
 ---
 
 ## 🚀 Getting Started
 
-### Prerequisites
-* GCC compiler with C++11 support
-* (Optional) [Docker Desktop](https://www.docker.com/products/docker-desktop/) for containerized deployment
-* (Optional) [MSYS2](https://www.msys2.org/) for Windows builds
+### Local Build & Run
+```powershell
+# Compile the project
+g++ -std=c++11 -I include src/main.cpp src/Rate_limiter.cpp -o gatekeeper
 
-### Building Locally
-
-1. **Compile the project:**
-   ```powershell
-   g++ -std=c++11 -I include src/main.cpp src/Rate_limiter.cpp -o gatekeeper.exe
-   ```
-
-2. **Run the application:**
-   ```powershell
-   .\gatekeeper.exe
-   ```
+# Run the application
+./gatekeeper
 
 ### Running with Docker
 
