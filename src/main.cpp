@@ -12,8 +12,9 @@ void display_help() {
     cout << "1. check <user_id>  - Log a request\n";
     cout << "2. status <user_id> - View remaining hits\n";
     cout << "3. clear <user_id>  - Reset user limits\n";
-    cout << "4. help             - Show this menu\n";
-    cout << "5. exit             - Save and quit\n";
+    cout << "4. throttle <0.0-1.0> - Set global throttle multiplier\n";
+    cout << "5. help             - Show this menu\n";
+    cout << "6. exit             - Save and quit\n";
     cout << "-------------------------------\n\n";
 }
 
@@ -78,6 +79,14 @@ int main() {
             if (userId.empty()) { cout << "Error: Provide a user ID.\n"; continue; }
             limiter.clear_user(userId);
             cout << "History cleared for " << userId << "\n";
+        }
+        else if (command == "throttle") {
+            float multiplier;
+            if (!(ss >> multiplier)) {
+                cout << "Error: Provide a multiplier (0.0 to 1.0).\n";
+            } else {
+                limiter.set_global_throttle(multiplier);
+            }
         }
         else if (command == "help") {
             display_help();

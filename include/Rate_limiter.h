@@ -17,6 +17,10 @@ public:
     int get_remaining(const std::string& user_id);
     int get_reset_time(const std::string& user_id);
     void clear_user(const std::string& user_id);
+    
+    // --- Throttling ---
+    void set_global_throttle(float multiplier);
+    float get_global_throttle() const;
 
     // --- File Operations ---
     void save_to_file(const std::string& filename);
@@ -30,6 +34,7 @@ private:
     std::mutex mutex_;
     int max_requests;
     int time_window_seconds;
+    float global_throttle_multiplier;
     std::unordered_map<std::string, UserData> user_data;
 
     // --- Private Helper ---

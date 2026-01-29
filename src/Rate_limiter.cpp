@@ -50,7 +50,7 @@ static std::string from_hex(const std::string& hex) {
 }
 
 Rate_Limiter::Rate_Limiter(int max_req, int window_sec) 
-    : max_requests(max_req), time_window_seconds(window_sec) {}
+    : max_requests(max_req), time_window_seconds(window_sec), global_throttle_multiplier(1.0f) {}
 
 void Rate_Limiter::clean_expired_timestamps(std::deque<std::chrono::steady_clock::time_point>& timestamps, 
                                             const std::chrono::steady_clock::time_point& now) {
@@ -66,8 +66,11 @@ bool Rate_Limiter::is_request_allowed(const std::string& user_id) {
     auto& timestamps = user_data[user_id].timestamps;
     
     clean_expired_timestamps(timestamps, now);
+    
+    int effective_limit = static_cast<int>(max_requests * global_throttle_multiplier);
+    if (effective_limit < 1) effective_limit = 1; // Min 1 req/window even when throttled
 
-    if (timestamps.size() < static_cast<size_t>(max_requests)) {
+    if (timestamps.size() < static_cast<size_t>(effective_limit)) {
         timestamps.push_back(now);
         return true;
     }
@@ -84,7 +87,10 @@ int Rate_Limiter::get_remaining(const std::string& user_id) {
     auto& timestamps = it->second.timestamps;
     clean_expired_timestamps(timestamps, now);
 
-    return std::max(0, max_requests - static_cast<int>(timestamps.size()));
+    int effective_limit = static_cast<int>(max_requests * global_throttle_multiplier);
+    if (effective_limit < 1) effective_limit = 1;
+
+    return std::max(0, effective_limit - static_cast<int>(timestamps.size()));
 }
 
 int Rate_Limiter::get_reset_time(const std::string& user_id) {
@@ -164,4 +170,17 @@ void Rate_Limiter::load_from_file(const std::string& filename) {
             continue;
         }
     }
+}
+
+void Rate_Limiter::set_global_throttle(float multiplier) {
+    if (multiplier < 0.0f) multiplier = 0.0f;
+    if (multiplier > 1.0f) multiplier = 1.0f;
+    
+    std::lock_guard<std::mutex> lock(mutex_);
+    global_throttle_multiplier = multiplier;
+    std::cout << "[SYSTEM] Global Throttle Multiplier set to " << multiplier << "\n";
+}
+
+float Rate_Limiter::get_global_throttle() const {
+    return global_throttle_multiplier;
 }
