@@ -4,6 +4,8 @@
 #include <vector>
 #include <limits>
 #include "../include/Rate_limiter.h"
+#include "../include/TrafficSniffer.h"
+
 
 using namespace std;
 
@@ -14,7 +16,10 @@ void display_help() {
     cout << "3. clear <user_id>  - Reset user limits\n";
     cout << "4. throttle <0.0-1.0> - Set global throttle multiplier\n";
     cout << "5. help             - Show this menu\n";
-    cout << "6. exit             - Save and quit\n";
+    cout << "5. sniff <port>     - Start automatic traffic detection\n";
+    cout << "6. help             - Show this menu\n";
+    cout << "7. exit             - Save and quit\n";
+
     cout << "-------------------------------\n\n";
 }
 
@@ -39,7 +44,9 @@ int main() {
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
     Rate_Limiter limiter(max_req, win_sec);
+    TrafficSniffer sniffer;
     limiter.load_from_file("limiter_db.txt");
+
 
     print_header();
 
@@ -88,7 +95,29 @@ int main() {
                 limiter.set_global_throttle(multiplier);
             }
         }
+        else if (command == "sniff") {
+            int port;
+            if (!(ss >> port)) {
+                cout << "Error: Provide a port number (e.g., 80).\n";
+            } else {
+                sniffer.stop_sniffing(); // Stop existing if any
+                bool success = sniffer.start_sniffing(port, [&](const string& ip) {
+                    if (limiter.is_request_allowed(ip)) {
+                        cout << "[AUTO-DETECTED] [ALLOWED] Source: " << ip 
+                             << " | Remaining: " << limiter.get_remaining(ip) << "/" << max_req << "\n";
+                    } else {
+                        cout << "[AUTO-DETECTED] [DENIED] Source: " << ip << ". Throttled.\n";
+                    }
+                });
+                if (success) {
+                    cout << "[SYSTEM] Auto-Detection started on port " << port << ".\n";
+                } else {
+                    cout << "[ERROR] Failed to start sniffing.\n";
+                }
+            }
+        }
         else if (command == "help") {
+
             display_help();
         }
         else if (!command.empty()) {
