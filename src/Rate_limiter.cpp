@@ -14,10 +14,12 @@ static std::string get_encryption_key() {
     if (env_key && strlen(env_key) > 0) {
         return std::string(env_key);
     }
-    // Fallback for development - WARN user in production
-    std::cerr << "[WARNING] GATEKEEPER_KEY not set. Using default key. Set env var for production!\n";
-    return "DefaultDevKey_ChangeInProduction!";
+    // In production, we should fail fast if the key is missing
+    std::cerr << "[CRITICAL ERROR] GATEKEEPER_KEY is not set. Data encryption will fail.\n";
+    std::cerr << "[ADVICE] Set GATEKEEPER_KEY as an environment variable before running.\n";
+    exit(1); 
 }
+
 
 static const std::string ENCRYPTION_KEY = get_encryption_key();
 

@@ -34,16 +34,35 @@ void TrafficSniffer::stop_sniffing() {
 }
 
 void TrafficSniffer::run_capture(int port) {
-    char *dev = pcap_lookupdev(errbuf);
-    if (dev == nullptr) {
-        std::cerr << "[Sniffer] Error finding device: " << errbuf << std::endl;
+    pcap_if_t *alldevs;
+    pcap_if_t *d;
+    char *dev = nullptr;
+
+    if (pcap_findalldevs(&alldevs, errbuf) == -1) {
+        std::cerr << "[Sniffer] Error in pcap_findalldevs: " << errbuf << std::endl;
         active = false;
         return;
     }
 
-    handle = pcap_open_live(dev, BUFSIZ, 1, 1000, errbuf);
+    // Pick the first device that isn't loopback and is up
+    for (d = alldevs; d; d = d->next) {
+        if (!(d->flags & PCAP_IF_LOOPBACK)) {
+            dev = d->name;
+            break;
+        }
+    }
+
+    if (dev == nullptr) {
+        std::cerr << "[Sniffer] No suitable interface found." << std::endl;
+        pcap_freealldevs(alldevs);
+        active = false;
+        return;
+    }
+
+    handle = pcap_open_live(dev, BUFSIZ, 1, 100, errbuf); // Lower timeout for responsiveness
     if (handle == nullptr) {
         std::cerr << "[Sniffer] Error opening device " << dev << ": " << errbuf << std::endl;
+        pcap_freealldevs(alldevs);
         active = false;
         return;
     }
@@ -52,19 +71,23 @@ void TrafficSniffer::run_capture(int port) {
     std::string filter = "tcp port " + std::to_string(port);
     if (pcap_compile(handle, &fp, filter.c_str(), 0, PCAP_NETMASK_UNKNOWN) == -1) {
         std::cerr << "[Sniffer] Error parsing filter: " << pcap_geterr(handle) << std::endl;
+        pcap_freealldevs(alldevs);
         active = false;
         return;
     }
 
     if (pcap_setfilter(handle, &fp) == -1) {
         std::cerr << "[Sniffer] Error setting filter: " << pcap_geterr(handle) << std::endl;
+        pcap_freealldevs(alldevs);
         active = false;
         return;
     }
 
-    std::cout << "[Sniffer] Monitoring traffic on " << dev << " port " << port << "..." << std::endl;
+    std::cout << "[Sniffer] Monitoring production traffic on " << dev << " port " << port << "..." << std::endl;
+    pcap_freealldevs(alldevs); // Free the list once open
     pcap_loop(handle, 0, packet_handler, reinterpret_cast<u_char*>(this));
 }
+
 
 void TrafficSniffer::packet_handler(u_char* user, const struct pcap_pkthdr* pkthdr, const u_char* packet) {
     TrafficSniffer* sniffer = reinterpret_cast<TrafficSniffer*>(user);
